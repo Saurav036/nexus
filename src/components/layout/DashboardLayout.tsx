@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { type ReactNode } from 'react'
 import { Box, Flex, Text, VStack, Icon, Button } from '@chakra-ui/react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -71,7 +71,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </Box>
 
         {/* Navigation */}
-        <VStack align="stretch" spacing={1} p={4}>
+        <VStack align="stretch" gap={1} p={4}>
           {navItems.map((item) => {
             const isActive = location.pathname === item.path ||
                             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
@@ -105,10 +105,10 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             width="full"
             justifyContent="flex-start"
             onClick={handleLogout}
-            leftIcon={<Icon as={FiLogOut} />}
             color="gray.700"
             _hover={{ bg: 'red.50', color: 'red.600' }}
           >
+            <Icon as={FiLogOut} mr={2} />
             Logout
           </Button>
         </Box>
@@ -123,4 +123,3 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     </Flex>
   )
 }
-
