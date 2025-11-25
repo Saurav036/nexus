@@ -1,184 +1,125 @@
-import { useState, useEffect } from 'react'
-import { Box, Heading, SimpleGrid, Icon, Text, Flex, VStack, Code, Button, Badge } from '@chakra-ui/react'
-import { FiUsers, FiDatabase, FiFileText, FiLink, FiCopy, FiShield } from 'react-icons/fi'
-import { DashboardLayout } from '../../components/layout/DashboardLayout'
+import { type ReactNode } from 'react'
+import { Box, Flex, Text, VStack, Icon, Button } from '@chakra-ui/react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import {
+  FiHome,
+  FiUsers,
+  FiDatabase,
+  FiFileText,
+  FiCreditCard,
+  FiKey,
+  FiLink,
+  FiSettings,
+  FiLogOut
+} from 'react-icons/fi'
 import { useAuth } from '../../contexts/AuthContext'
-import { toaster } from '../../components/ui/toaster'
-import { usersApi, ApiError } from '../../services/api'
-import type { User as UserType } from '../../types/api'
+import { toaster } from '../ui/toaster'
 
-const Dashboard = () => {
-  const { user, accessToken } = useAuth()
-  const [userData, setUserData] = useState<UserType | null>(null)
-  const [loading, setLoading] = useState(true)
+interface DashboardLayoutProps {
+  children: ReactNode
+}
 
-  // Fetch user data with organization info
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (user?.auth0Id) {
-        try {
-          setLoading(true)
-          const response = await usersApi.getByAuth0Id(user.auth0Id)
-          const fetchedUserData = response.data || response.result
-          setUserData(fetchedUserData)
-        } catch (error) {
-          console.error('Error fetching user data:', error)
-          toaster.create({
-            title: 'Error loading user data',
-            description: error instanceof ApiError ? error.message : 'Failed to load user data',
-            type: 'error',
-            duration: 5000,
-          })
-        } finally {
-          setLoading(false)
-        }
-      }
-    }
+interface NavItem {
+  label: string
+  path: string
+  icon: any
+}
 
-    fetchUserData()
-  }, [user])
+const navItems: NavItem[] = [
+  { label: 'Dashboard', path: '/dashboard', icon: FiHome },
+  { label: 'Users', path: '/dashboard/users', icon: FiUsers },
+  { label: 'Organizations', path: '/dashboard/organizations', icon: FiDatabase },
+  { label: 'Connections', path: '/dashboard/connections', icon: FiLink },
+  // { label: 'Credentials', path: '/dashboard/credentials', icon: FiKey },
+  { label: 'Reports', path: '/dashboard/reports', icon: FiFileText },
+  { label: 'Billings', path: '/dashboard/billings', icon: FiCreditCard },
+  // { label: 'Settings', path: '/dashboard/settings', icon: FiSettings },
+]
 
-  // Get user's role and organization
-  const userRole = userData?.UserOrgMaps?.[0]?.role
-  const userOrg = userData?.UserOrgMaps?.[0]?.org
-  const isAdmin = userRole === 'ADMIN'
+export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
 
-  // TODO: Fetch actual stats from API
-  const stats = [
-    { label: 'Total Users', value: '0', icon: FiUsers, color: 'blue' },
-    { label: 'Organizations', value: '0', icon: FiDatabase, color: 'purple' },
-    { label: 'Active Reports', value: '0', icon: FiFileText, color: 'green' },
-    { label: 'Connections', value: '0', icon: FiLink, color: 'orange' },
-  ]
-
-  const handleCopyToken = () => {
-    if (accessToken) {
-      navigator.clipboard.writeText(accessToken)
-      toaster.create({
-        title: 'Copied!',
-        description: 'Access token copied to clipboard',
-        type: 'success',
-        duration: 2000,
-      })
-    }
+  const handleLogout = () => {
+    logout()
+    toaster.create({
+      title: 'Logged out successfully',
+      type: 'success',
+      duration: 2000,
+    })
+    navigate('/login')
   }
 
   return (
-    <DashboardLayout>
-      <Box>
-        <Heading mb={6}>Dashboard</Heading>
+    <Flex h="100vh" bg="gray.50">
+      {/* Sidebar */}
+      <Box
+        w="250px"
+        bg="white"
+        borderRightWidth={1}
+        borderColor="gray.200"
+        overflowY="auto"
+      >
+        {/* Logo/Brand */}
+        <Box p={6} borderBottomWidth={1} borderColor="gray.200">
+          <Text fontSize="xl" fontWeight="bold">
+            <Text as="span" color="black">Nexus</Text>
+            {' '}
+            <Text as="span" color="gray.500" fontWeight="normal">for Tableau</Text>
+          </Text>
+        </Box>
 
-        {/* Display User Info and Access Token */}
-        {user && accessToken && (
-          <Box mb={6} bg="white" p={6} borderRadius="lg" borderWidth={1} borderColor="gray.200">
-            <Flex justify="space-between" align="center" mb={4}>
-              <Heading size="md">Welcome, {user.userEmail}!</Heading>
-              {userRole && (
-                <Badge
-                  colorScheme={isAdmin ? 'purple' : 'blue'}
-                  px={3}
-                  py={1}
-                  borderRadius="full"
-                  fontSize="sm"
-                  fontWeight="bold"
-                  display="flex"
-                  alignItems="center"
-                  gap={2}
-                >
-                  <Icon as={FiShield} />
-                  {isAdmin ? 'ADMIN' : 'MEMBER'}
-                </Badge>
-              )}
-            </Flex>
-            <VStack align="stretch" gap={4}>
-              <Box>
-                {/* <Text fontSize="sm" fontWeight="medium" color="black" mb={2}>
-                  User ID: <Text as="span" fontWeight="normal">{user.userId}</Text>
-                </Text> */}
-                {/* <Text fontSize="sm" fontWeight="medium" color="black" mb={2}>
-                  Auth0 ID: <Text as="span" fontWeight="normal">{user.auth0Id}</Text>
-                </Text> */}
-                {userOrg && (
-                  <>
-                    <Text fontSize="sm" fontWeight="medium" color="black" mb={2}>
-                      Organization: <Text as="span" fontWeight="normal">{userOrg.name}</Text>
-                    </Text>
-                    {/* <Text fontSize="sm" fontWeight="medium" color="black" mb={2}>
-                      Organization ID: <Text as="span" fontWeight="normal">{userOrg.id}</Text>
-                    </Text> */}
-                    <Text fontSize="sm" fontWeight="medium" color="black" mb={2}>
-                      Domain: <Text as="span" fontWeight="normal">{userOrg.domain}</Text>
-                    </Text>
-                  </>
-                )}
-              </Box>
-              {/* <Box>
-                <Flex justify="space-between" align="center" mb={2}>
-                  <Text fontSize="sm" fontWeight="medium" color="gray.700">
-                    Access Token:
-                  </Text>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    leftIcon={<Icon as={FiCopy} />}
-                    onClick={handleCopyToken}
-                  >
-                    Copy Token
-                  </Button>
-                </Flex>
-                <Code
-                  display="block"
+        {/* Navigation */}
+        <VStack align="stretch" gap={1} p={4}>
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path ||
+                            (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
+
+            return (
+              <Link key={item.path} to={item.path} style={{ textDecoration: 'none' }}>
+                <Flex
+                  align="center"
+                  gap={3}
                   p={3}
                   borderRadius="md"
-                  bg="gray.50"
-                  fontSize="xs"
-                  overflowX="auto"
-                  whiteSpace="pre-wrap"
-                  wordBreak="break-all"
+                  bg={isActive ? 'purple.50' : 'transparent'}
+                  color={isActive ? 'purple.600' : 'gray.700'}
+                  fontWeight={isActive ? 'semibold' : 'normal'}
+                  _hover={{ bg: isActive ? 'purple.50' : 'gray.100' }}
+                  transition="all 0.2s"
+                  cursor="pointer"
                 >
-                  {accessToken}
-                </Code>
-              </Box> */}
-            </VStack>
-          </Box>
-        )}
-
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
-          {stats.map((stat) => (
-            <Box
-              key={stat.label}
-              bg="white"
-              p={6}
-              borderRadius="lg"
-              borderWidth={1}
-              borderColor="gray.200"
-              _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
-              transition="all 0.2s"
-            >
-              <VStack align="stretch" gap={2}>
-                <Flex justify="space-between" align="center">
-                  <Text fontSize="sm" color="black" fontWeight="medium">
-                    {stat.label}
-                  </Text>
-                  <Icon as={stat.icon} color={`${stat.color}.500`} boxSize={5} />
+                  <Icon as={item.icon} boxSize={5} />
+                  <Text fontSize="sm">{item.label}</Text>
                 </Flex>
-                <Text fontSize="3xl" fontWeight="bold" color={`${stat.color}.600`}>
-                  {stat.value}
-                </Text>
-              </VStack>
-            </Box>
-          ))}
-        </SimpleGrid>
+              </Link>
+            )
+          })}
+        </VStack>
 
-        <Box mt={8} bg="white" p={6} borderRadius="lg" borderWidth={1} borderColor="gray.200">
-          <Heading size="md" mb={4}>Quick Actions</Heading>
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-            {/* TODO: Add quick action buttons */}
-          </SimpleGrid>
+        {/* Logout Button */}
+        <Box p={4} mt="auto" borderTopWidth={1} borderColor="gray.200">
+          <Button
+            variant="ghost"
+            width="full"
+            justifyContent="flex-start"
+            onClick={handleLogout}
+            color="gray.700"
+            _hover={{ bg: 'red.50', color: 'red.600' }}
+          >
+            <Icon as={FiLogOut} mr={2} />
+            Logout
+          </Button>
         </Box>
       </Box>
-    </DashboardLayout>
+
+      {/* Main Content */}
+      <Box flex={1} overflowY="auto">
+        <Box maxW="1400px" mx="auto" p={8}>
+          {children}
+        </Box>
+      </Box>
+    </Flex>
   )
 }
-
-export default Dashboard
