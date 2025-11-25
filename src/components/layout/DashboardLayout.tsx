@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { type ReactNode } from 'react';
 import { Box, Flex, Text, VStack, Icon, Button } from '@chakra-ui/react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -123,3 +123,4 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     </Flex>
   )
 }
+
